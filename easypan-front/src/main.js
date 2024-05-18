@@ -10,6 +10,8 @@ import '@/assets/base.scss'
 // 引入cookies
 import VueCookies from 'vue-cookies'
 
+import Verify from '@/utils/Verify'
+
 // 自定义组件
 import Dialog from '@/components/Dialog.vue'
 
@@ -19,4 +21,7 @@ app.use(ElementPlus)
 app.use(router)
 
 app.component("Dialog", Dialog)
+
+// 配置全局组件
+app.config.globalProperties.Verify = Verify
 app.mount('#app')

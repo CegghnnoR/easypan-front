@@ -1,12 +1,12 @@
 <template>
   <div>
     <el-dialog
+      class="cust-dialog"
       :show-close="showClose"
       :draggable="true"
       :model-value="show"
       :close-on-click-modal="false"
       :title="title"
-      class="cust-dialog"
       :top="top + 'px'"
       :width="width"
       @close="close"
@@ -17,11 +17,12 @@
       >
         <slot></slot>
       </div>
-      <template v-if="(buttons && buttons.lenght > 0) || showCancel">
+      <template v-if="(buttons && buttons.length > 0) || showCancel">
         <div class="dialog-footer">
           <el-button link @click="close" v-if="showCancel">取消</el-button>
           <el-button
             v-for="btn in buttons"
+            :type="btn.type"
             :key="btn.type || 'primary'"
             @click="btn.click"
           >
@@ -36,51 +37,48 @@
 <script setup>
 const props = defineProps({
   title: {
-    type: String
+    type: String,
   },
   show: {
     type: Boolean,
-    default: false
+    default: false,
   },
   showClose: {
     type: Boolean,
-    default: true
+    default: true,
   },
   showCancel: {
     type: Boolean,
-    default: true
+    default: true,
   },
   top: {
     type: Number,
-    default: 50
+    default: 50,
   },
   width: {
     type: String,
-    default: "30%"
+    default: "30%",
   },
   buttons: {
-    type: Array
+    type: Array,
   },
   padding: {
     type: Number,
-    default: 15
-  }
-})
+    default: 15,
+  },
+});
 
-const maxHeight = window.innerHeight - props.top - 100
+const maxHeight = window.innerHeight - props.top - 100;
 
-const emit = defineEmits()
+const emit = defineEmits();
 const close = () => {
-  emit("close")
-}
+  emit("close");
+};
 </script>
 
 <style lang="scss">
 .cust-dialog {
   margin: 30px auto 10px !important;
-  .el-dialog__body {
-    padding: 0px;
-  }
   .dialog-body {
     border-top: 1px solid #ddd;
     border-bottom: 1px solid #ddd;

@@ -51,7 +51,12 @@
                   <span class="iconfont icon-checkcode"></span>
                 </template>
               </el-input>
-              <el-button class="send-email-btn" type="primary" size="large">
+              <el-button
+                class="send-email-btn"
+                type="primary"
+                size="large"
+                @click="getEmailCode"
+              >
                 获取验证码
               </el-button>
             </div>
@@ -107,7 +112,7 @@
           </el-form-item>
         </div>
         <!-- 验证码 -->
-        <el-form-item>
+        <el-form-item prop="checkCode">
           <div class="check-code-panel">
             <el-input
               size="large"
@@ -150,7 +155,12 @@
           </a>
         </el-form-item>
         <el-form-item>
-          <el-button class="op-btn" type="primary" size="large">
+          <el-button
+            class="op-btn"
+            type="primary"
+            size="large"
+            @click="doSubmit"
+          >
             <span v-if="opType == 0">注册</span>
             <span v-if="opType == 1">登录</span>
             <span v-if="opType == 2">重置密码</span>
@@ -159,13 +169,42 @@
       </el-form>
     </div>
     <Dialog
-      :show="dialogConfig4SendMailCode.sohw"
+      :show="dialogConfig4SendMailCode.show"
       :title="dialogConfig4SendMailCode.title"
-      :button="dialogConfig4SendMailCode.buttons"
+      :buttons="dialogConfig4SendMailCode.buttons"
       width="500px"
-      :showCancel="flase"
+      :showCancel="false"
       @close="dialogConfig4SendMailCode.show = false"
     >
+      <el-form
+        :model="formData4SendMailCode"
+        :rules="rules"
+        ref="formData4SendMailCodeRef"
+        label-width="80px"
+        @submit.prevent
+      >
+        <el-form-item label="邮箱">
+          {{ formData.email }}
+        </el-form-item>
+        <el-form-item label="验证码" prop="checkCode">
+          <div class="check-code-panel">
+            <el-input
+              size="large"
+              placeholder="请输入验证码"
+              v-model.trim="formData4SendMailCode.checkCode"
+            >
+              <template #prefix>
+                <span class="iconfont icon-checkcode"></span>
+              </template>
+            </el-input>
+            <img
+              :src="checkCodeUrl4SendMailCode"
+              class="check-code"
+              @click="changeCheckCode(1)"
+            />
+          </div>
+        </el-form-item>
+      </el-form>
     </Dialog>
   </div>
 </template>
@@ -182,20 +221,116 @@ const api = {
 const opType = ref(1);
 const showPanel = (type) => {
   opType.value = type;
+  resetForm();
 };
 
 const formData = ref({});
 const formDataRef = ref();
+
+// 校验规则
+const checkRePassword = (rule, value, callback) => {
+  if (formData.value.registerPassword !== value) {
+    callback(new Error(rule.message));
+  } else callback();
+};
 const rules = {
-  title: [{ require: true, message: "请输入内容" }],
+  email: [
+    { required: true, message: "请输入邮箱地址", trigger: "blur" },
+    { type: "email", message: "请输入有效的邮箱地址", trigger: "blur" },
+  ],
+  password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+  emailCode: [{ required: true, message: "请输入邮箱验证码", trigger: "blur" }],
+  nickName: [{ required: true, message: "请输入昵称", trigger: "blur" }],
+  registerPassword: [
+    { required: true, message: "请输入密码", trigger: "blur" },
+    {
+      validator: proxy.Verify.password,
+      message: "密码长度8-18位，至少包含1个数字和1个字母",
+      trigger: "blur",
+    },
+  ],
+  reRegisterPassword: [
+    { required: true, message: "请再次输入密码", trigger: "blur" },
+    {
+      validator: checkRePassword,
+      message: "再次输入的密码不一致",
+      trigger: "blur",
+    },
+  ],
+  checkCode: [{ required: true, message: "请输入图片验证码", trigger: "blur" }],
 };
 
 const checkCodeUrl = ref(api.checkCode);
+const checkCodeUrl4SendMailCode = ref(api.checkCode);
 const changeCheckCode = (type) => {
-  checkCodeUrl.value = `${
-    api.checkCode
-  }?type=${type}&time=${new Date().getTime()}`;
+  if (type == 0) {
+    checkCodeUrl.value = `${
+      api.checkCode
+    }?type=${type}&time=${new Date().getTime()}`;
+  } else if (type == 1) {
+    checkCodeUrl4SendMailCode.value = `${
+      api.checkCode
+    }?type=${type}&time=${new Date().getTime()}`;
+  }
 };
+
+// 发送邮箱验证码
+const formData4SendMailCode = ref({});
+const formData4SendMailCodeRef = ref();
+
+const dialogConfig4SendMailCode = reactive({
+  show: false,
+  title: "发送邮箱验证码",
+  buttons: [
+    {
+      type: "primary",
+      text: "发送验证码",
+      click: (e) => {
+        sendEmailCode();
+      },
+    },
+  ],
+});
+
+// 获取验证码的弹窗
+const getEmailCode = () => {
+  formDataRef.value.validateField("email", (valid) => {
+    if (!valid) return;
+    dialogConfig4SendMailCode.show = true;
+    nextTick(() => {
+      changeCheckCode(1);
+      formData4SendMailCodeRef.value.resetFields();
+      formData4SendMailCode.value = {
+        email: formData.value.email,
+      };
+    });
+  });
+};
+
+// 发送邮箱验证码
+const sendEmailCode = () => {
+  formData4SendMailCodeRef.value.validate((valid) => {
+    if (!valid) return
+
+  })
+}
+
+// 重置表单
+const resetForm = () => {
+  changeCheckCode(0);
+  formDataRef.value.resetFields();
+  formData.value = {};
+  // 登录
+  if (opType.value == 1) {
+
+  }
+}
+
+const doSubmit = () => {
+  formDataRef.value.validate((valid) => {
+    if (!valid) return
+  })
+}
 </script>
 
 <style lang="scss" scoped>
