@@ -215,6 +215,7 @@ const { proxy } = getCurrentInstance();
 
 const api = {
   checkCode: "/api/checkCode",
+  sendEmailCode: "/sendEmailCode"
 };
 
 // 操作类型 0：注册 1：登录 2：重置密码
@@ -309,9 +310,22 @@ const getEmailCode = () => {
 
 // 发送邮箱验证码
 const sendEmailCode = () => {
-  formData4SendMailCodeRef.value.validate((valid) => {
+  formData4SendMailCodeRef.value.validate(async (valid) => {
     if (!valid) return
-
+    const params = Object.assign({}, formData4SendMailCode.value)
+    params.type = opType.value == 0 ? 0 : 1
+    let result = await proxy.Request({
+      url: api.sendEmailCode,
+      params: params,
+      errorCallback: () => {
+        changeCheckCode(1)
+      }
+    })
+    if (!result) {
+      return
+    }
+    proxy.Message.success("验证码发送成功，请登录邮箱查看")
+    dialogConfig4SendMailCode.show = false
   })
 }
 
@@ -327,8 +341,9 @@ const resetForm = () => {
 }
 
 const doSubmit = () => {
-  formDataRef.value.validate((valid) => {
+  formDataRef.value.validate(async (valid) => {
     if (!valid) return
+
   })
 }
 </script>

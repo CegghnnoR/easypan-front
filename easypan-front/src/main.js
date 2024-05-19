@@ -11,6 +11,8 @@ import '@/assets/base.scss'
 import VueCookies from 'vue-cookies'
 
 import Verify from '@/utils/Verify'
+import Message from './utils/Message'
+import Request from './utils/Request'
 
 // 自定义组件
 import Dialog from '@/components/Dialog.vue'
@@ -24,4 +26,6 @@ app.component("Dialog", Dialog)
 
 // 配置全局组件
 app.config.globalProperties.Verify = Verify
+app.config.globalProperties.Message = Message
+app.config.globalProperties.Request = Request
 app.mount('#app')
