@@ -92,6 +92,7 @@
               size="large"
               placeholder="请输入密码"
               v-model.trim="formData.registerPassword"
+              show-password
             >
               <template #prefix>
                 <span class="iconfont icon-password"></span>
@@ -104,6 +105,7 @@
               size="large"
               placeholder="请重复密码"
               v-model.trim="formData.reRegisterPassword"
+              show-password
             >
               <template #prefix>
                 <span class="iconfont icon-password"></span>
@@ -118,6 +120,7 @@
               size="large"
               placeholder="请输入验证码"
               v-model.trim="formData.checkCode"
+              @keyup.enter="doSubmit"
             >
               <template #prefix>
                 <span class="iconfont icon-checkcode"></span>
@@ -210,34 +213,46 @@
 </template>
 
 <script setup>
-import { ref, reactive, getCurrentInstance, nextTick } from "vue";
-const { proxy } = getCurrentInstance();
+import { ref, reactive, getCurrentInstance, nextTick, onMounted } from "vue"
+import { useRoute, useRouter } from "vue-router"
+import md5 from "js-md5"
 
+const { proxy } = getCurrentInstance()
+const router = useRouter()
+const route = useRoute()
 const api = {
   checkCode: "/api/checkCode",
-  sendEmailCode: "/sendEmailCode"
-};
+  sendEmailCode: "/sendEmailCode",
+  register: "/register",
+  login: "/login",
+  resetPwd: "/resetPwd",
+  qqlogin: "/qqlogin"
+}
 
 // 操作类型 0：注册 1：登录 2：重置密码
-const opType = ref(1);
+const opType = ref(1)
 const showPanel = (type) => {
-  opType.value = type;
-  resetForm();
-};
+  opType.value = type
+  resetForm()
+}
 
-const formData = ref({});
-const formDataRef = ref();
+onMounted(() => {
+  showPanel(1)
+})
+
+const formData = ref({})
+const formDataRef = ref()
 
 // 校验规则
 const checkRePassword = (rule, value, callback) => {
   if (formData.value.registerPassword !== value) {
-    callback(new Error(rule.message));
-  } else callback();
-};
+    callback(new Error(rule.message))
+  } else callback()
+}
 const rules = {
   email: [
     { required: true, message: "请输入邮箱地址", trigger: "blur" },
-    { type: "email", message: "请输入有效的邮箱地址", trigger: "blur" },
+    { type: "email", message: "请输入有效的邮箱地址", trigger: "blur" }
   ],
   password: [{ required: true, message: "请输入密码", trigger: "blur" }],
   emailCode: [{ required: true, message: "请输入邮箱验证码", trigger: "blur" }],
@@ -247,37 +262,37 @@ const rules = {
     {
       validator: proxy.Verify.password,
       message: "密码长度8-18位，至少包含1个数字和1个字母",
-      trigger: "blur",
-    },
+      trigger: "blur"
+    }
   ],
   reRegisterPassword: [
     { required: true, message: "请再次输入密码", trigger: "blur" },
     {
       validator: checkRePassword,
       message: "再次输入的密码不一致",
-      trigger: "blur",
-    },
+      trigger: "blur"
+    }
   ],
-  checkCode: [{ required: true, message: "请输入图片验证码", trigger: "blur" }],
-};
+  checkCode: [{ required: true, message: "请输入图片验证码", trigger: "blur" }]
+}
 
-const checkCodeUrl = ref(api.checkCode);
-const checkCodeUrl4SendMailCode = ref(api.checkCode);
+const checkCodeUrl = ref(api.checkCode)
+const checkCodeUrl4SendMailCode = ref(api.checkCode)
 const changeCheckCode = (type) => {
   if (type == 0) {
     checkCodeUrl.value = `${
       api.checkCode
-    }?type=${type}&time=${new Date().getTime()}`;
+    }?type=${type}&time=${new Date().getTime()}`
   } else if (type == 1) {
     checkCodeUrl4SendMailCode.value = `${
       api.checkCode
-    }?type=${type}&time=${new Date().getTime()}`;
+    }?type=${type}&time=${new Date().getTime()}`
   }
-};
+}
 
 // 发送邮箱验证码
-const formData4SendMailCode = ref({});
-const formData4SendMailCodeRef = ref();
+const formData4SendMailCode = ref({})
+const formData4SendMailCodeRef = ref()
 
 const dialogConfig4SendMailCode = reactive({
   show: false,
@@ -287,26 +302,26 @@ const dialogConfig4SendMailCode = reactive({
       type: "primary",
       text: "发送验证码",
       click: (e) => {
-        sendEmailCode();
-      },
-    },
-  ],
-});
+        sendEmailCode()
+      }
+    }
+  ]
+})
 
 // 获取验证码的弹窗
 const getEmailCode = () => {
   formDataRef.value.validateField("email", (valid) => {
-    if (!valid) return;
-    dialogConfig4SendMailCode.show = true;
+    if (!valid) return
+    dialogConfig4SendMailCode.show = true
     nextTick(() => {
-      changeCheckCode(1);
-      formData4SendMailCodeRef.value.resetFields();
+      changeCheckCode(1)
+      formData4SendMailCodeRef.value.resetFields()
       formData4SendMailCode.value = {
         email: formData.value.email,
-      };
-    });
-  });
-};
+      }
+    })
+  })
+}
 
 // 发送邮箱验证码
 const sendEmailCode = () => {
@@ -331,19 +346,81 @@ const sendEmailCode = () => {
 
 // 重置表单
 const resetForm = () => {
-  changeCheckCode(0);
-  formDataRef.value.resetFields();
-  formData.value = {};
+  changeCheckCode(0)
+  formDataRef.value.resetFields()
+  formData.value = {}
   // 登录
   if (opType.value == 1) {
-
+    const cookieLoginInfo = proxy.VueCookies.get("loginInfo")
+    if (cookieLoginInfo) {
+      formData.value = cookieLoginInfo
+    }
   }
 }
-
+// 登录、注册、重置密码、提交表单
 const doSubmit = () => {
   formDataRef.value.validate(async (valid) => {
     if (!valid) return
-
+    let params = {}
+    Object.assign(params, formData.value)
+    // 注册 找回密码
+    if (opType == 0 || opType.value == 2) {
+      params.password = params.registerPassword
+      delete params.registerPassword
+      delete params.reRegisterPassword
+    }
+    // 登录
+    if (opType.value == 1) {
+      let cookieLoginInfo = proxy.VueCookies.get("loginInfo")
+      let cookiePassword = cookieLoginInfo == null ? null : cookieLoginInfo.password
+      if (params.password !== cookiePassword) {
+        params.password = md5(params.password)
+      }
+    }
+    let url = null
+    if (opType.value == 0) {
+      url = api.register
+    } else if (opType.value == 1) {
+      url = api.login
+    } else if (opType.value == 2) {
+      url = api.resetPwd
+    }
+    let result = await proxy.Request({
+      url,
+      params,
+      errorCallback: () => {
+        changeCheckCode(0)
+      }
+    })
+    if (!result) {
+      return
+    }
+    // 注册返回
+    if (opType.value == 0) {
+      proxy.Message.success("注册成功，请登录")
+      showPanel(1)
+    } else if (opType.value == 1) {
+      if (params.rememberMe) {
+        const loginInfo = {
+          email: params.email,
+          password: params.password,
+          rememberMe: params.rememberMe
+        }
+        proxy.VueCookies.set("loginInfo", loginInfo, "7d")
+      } else {
+        proxy.VueCookies.remove("loginInfo")
+      }
+      proxy.Message.success("登录成功")
+      // 存储cookie
+      proxy.VueCookies.set("userInfo", result.data, 0)
+      // 重定向到原始页面
+      const redirectUrl = route.query.redirectUrl || "/"
+      router.push(redirectUrl)
+    } else if (opType.value == 2) {
+      // 重置密码
+      proxy.Message.success("重置密码成功，请登录")
+      showPanel(1)
+    }
   })
 }
 </script>

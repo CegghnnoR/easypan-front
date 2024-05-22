@@ -28,4 +28,5 @@ app.component("Dialog", Dialog)
 app.config.globalProperties.Verify = Verify
 app.config.globalProperties.Message = Message
 app.config.globalProperties.Request = Request
+app.config.globalProperties.VueCookies = VueCookies
 app.mount('#app')
