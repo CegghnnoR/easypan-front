@@ -364,7 +364,7 @@ const doSubmit = () => {
     let params = {}
     Object.assign(params, formData.value)
     // 注册 找回密码
-    if (opType == 0 || opType.value == 2) {
+    if (opType.value == 0 || opType.value == 2) {
       params.password = params.registerPassword
       delete params.registerPassword
       delete params.reRegisterPassword
