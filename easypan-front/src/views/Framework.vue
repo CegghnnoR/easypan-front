@@ -45,7 +45,7 @@
               'menu-item', 
               item.menuCode == currentMenu.menuCode ? 'active' : ''
             ]"
-            v-for="item in menu" 
+            v-for="item in menus" 
             :key="item.name"
             @click="jump(item)"
           >
@@ -55,7 +55,8 @@
         </div>
         <div class="menu-sub-list">
           <div 
-            :class="['item-item-sub']" 
+            @click="jump(sub)"
+            :class="['menu-item-sub', currentPath == sub.path ? 'active' : '']" 
             v-for="sub in currentMenu.children"
             :key="sub.name"
           >
@@ -74,20 +75,26 @@
           </div>
         </div>
       </div>
-      <div class="body-content"></div>
+      <div class="body-content">
+        <router-view v-slot="{ Component }">
+          <component :is="Component"></component>
+        </router-view>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, getCurrentInstance, nextTick, onMounted } from "vue"
+import { ref, reactive, getCurrentInstance, nextTick, onMounted, watch } from "vue"
+import { useRouter, useRoute } from "vue-router"
 const { proxy } = getCurrentInstance()
+const router = useRouter()
+const route = useRoute()
 
-const userInfo = ref({
-  nickName: "张三"
-})
+// console.log(proxy.VueCookies.get("loginInfo"));
+const userInfo = ref(proxy.VueCookies.get("loginInfo"))
 
-const menu = [
+const menus = [
   {
     icon: "cloude",
     name: "首页",
@@ -161,7 +168,7 @@ const menu = [
     ]
   },
   {
-    path: "/setting/fileList",
+    path: "/settings/fileList",
     icon: "settings",
     name: "设置",
     menuCode: "settings",
@@ -184,7 +191,32 @@ const menu = [
 ]
 
 const currentMenu = ref({})
+const currentPath = ref()
 
+const jump = (data) => {
+  if (!data.path || data.menuCode == currentMenu.value.menuCode) {
+    return
+  }
+  router.push(data.path)
+}
+
+const setMenu = (menuCode, path) => {
+  const menu = menus.find(item => {
+    return item.menuCode === menuCode
+  })
+  currentMenu.value = menu
+  currentPath.value = path
+}
+
+watch(
+  () => route,
+  (newVal, oldVal) => {
+    if (newVal.meta.menuCode) {
+      setMenu(newVal.meta.menuCode, newVal.path)
+    }
+  },
+  { immediate: true, deep: true }
+);
 </script>
 
 <style lang="scss" scoped>
