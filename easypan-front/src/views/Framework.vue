@@ -24,12 +24,17 @@
         </el-popover>
         <el-dropdown>
           <div class="user-info">
-            <div class="avatar"></div>
+            <div class="avatar">
+              <Avatar :userId="userInfo.userId"
+                :avatar="userInfo.avatar"
+                :timestamp="timestamp"
+                :width="46"></Avatar>
+            </div>
             <span class="nick-name">{{ userInfo.nickName }}</span>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>修改头像</el-dropdown-item>
+              <el-dropdown-item @click="updateAvatar">修改头像</el-dropdown-item>
               <el-dropdown-item>修改密码</el-dropdown-item>
               <el-dropdown-item>退出</el-dropdown-item>
             </el-dropdown-menu>
@@ -81,18 +86,23 @@
         </router-view>
       </div>
     </div>
+    <UpdateAvatar
+      ref="updateAvatarRef"
+      @updateAvatar="reloadAvatar"
+    ></UpdateAvatar>
   </div>
 </template>
 
 <script setup>
+import UpdateAvatar from './UpdateAvatar.vue'
 import { ref, reactive, getCurrentInstance, nextTick, onMounted, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
 const { proxy } = getCurrentInstance()
 const router = useRouter()
 const route = useRoute()
 
-// console.log(proxy.VueCookies.get("loginInfo"));
-const userInfo = ref(proxy.VueCookies.get("loginInfo"))
+const timestamp = ref(0)
+const userInfo = ref(proxy.VueCookies.get("userInfo"))
 
 const menus = [
   {
@@ -216,7 +226,18 @@ watch(
     }
   },
   { immediate: true, deep: true }
-);
+)
+
+// 修改头像
+const updateAvatarRef = ref()
+const updateAvatar = () => {
+  updateAvatarRef.value.show(userInfo.value)
+}
+
+const reloadAvatar = () => {
+  userInfo.value = proxy.VueCookies.get('userInfo')
+  timestamp.value = new Date().getTime()
+}
 </script>
 
 <style lang="scss" scoped>

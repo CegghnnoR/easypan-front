@@ -16,6 +16,7 @@ import Request from './utils/Request'
 
 // 自定义组件
 import Dialog from '@/components/Dialog.vue'
+import Avatar from '@/components/Avatar.vue'
 
 const app = createApp(App)
 
@@ -23,10 +24,14 @@ app.use(ElementPlus)
 app.use(router)
 
 app.component("Dialog", Dialog)
+app.component("Avatar", Avatar)
 
 // 配置全局组件
 app.config.globalProperties.Verify = Verify
 app.config.globalProperties.Message = Message
 app.config.globalProperties.Request = Request
 app.config.globalProperties.VueCookies = VueCookies
+app.config.globalProperties.globalInfo = {
+  avatarUrl:"/api/getAvatar/"
+}
 app.mount('#app')
