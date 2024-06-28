@@ -35,7 +35,7 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="updateAvatar">修改头像</el-dropdown-item>
-              <el-dropdown-item>修改密码</el-dropdown-item>
+              <el-dropdown-item @click="updatePassword">修改密码</el-dropdown-item>
               <el-dropdown-item>退出</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -90,6 +90,7 @@
       ref="updateAvatarRef"
       @updateAvatar="reloadAvatar"
     ></UpdateAvatar>
+    <UpdatePassword ref="updatePasswordRef"></UpdatePassword>
   </div>
 </template>
 
@@ -97,6 +98,7 @@
 import UpdateAvatar from './UpdateAvatar.vue'
 import { ref, reactive, getCurrentInstance, nextTick, onMounted, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
+import UpdatePassword from './UpdatePassword.vue';
 const { proxy } = getCurrentInstance()
 const router = useRouter()
 const route = useRoute()
