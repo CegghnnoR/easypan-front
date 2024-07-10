@@ -4,7 +4,7 @@
       :show="dialogConfig.show"
       :title="dialogConfig.title"
       :buttons="dialogConfig.buttons"
-      width="400px"
+      width="500px"
       :showCancel="false"
       @close="dialogConfig.show = false"
     >
@@ -33,7 +33,7 @@
             type="password"
             size="large"
             placeholder="请再次输入密码"
-            v-model.trim="formData.password"
+            v-model.trim="formData.rePassword"
             show-password
           >
             <template #prefix>
@@ -56,7 +56,7 @@ const api = {
 
 // 校验规则
 const checkRePassword = (rule, value, callback) => {
-  if (formData.value.rePassword !== value) {
+  if (formData.value.password !== value) {
     callback(new Error(rule.message))
   } else callback()
 }

@@ -36,7 +36,7 @@
             <el-dropdown-menu>
               <el-dropdown-item @click="updateAvatar">修改头像</el-dropdown-item>
               <el-dropdown-item @click="updatePassword">修改密码</el-dropdown-item>
-              <el-dropdown-item>退出</el-dropdown-item>
+              <el-dropdown-item @click="logout">退出</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -96,12 +96,16 @@
 
 <script setup>
 import UpdateAvatar from './UpdateAvatar.vue'
+import UpdatePassword from './UpdatePassword.vue'
 import { ref, reactive, getCurrentInstance, nextTick, onMounted, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
-import UpdatePassword from './UpdatePassword.vue';
 const { proxy } = getCurrentInstance()
 const router = useRouter()
 const route = useRoute()
+
+const api = {
+  logout: '/logout'
+}
 
 const timestamp = ref(0)
 const userInfo = ref(proxy.VueCookies.get("userInfo"))
@@ -239,6 +243,26 @@ const updateAvatar = () => {
 const reloadAvatar = () => {
   userInfo.value = proxy.VueCookies.get('userInfo')
   timestamp.value = new Date().getTime()
+}
+
+// 修改密码
+const updatePasswordRef = ref()
+const updatePassword = () => {
+  updatePasswordRef.value.show()
+}
+
+// 退出
+const logout = async () => {
+  proxy.Confirm('你确定要退出吗', async () => {
+    let result = await proxy.Request({
+      url: api.logout
+    })
+    if (!result) {
+      return
+    }
+    proxy.VueCookies.remove('userInfo')
+    router.push('/login')
+  })
 }
 </script>
 
