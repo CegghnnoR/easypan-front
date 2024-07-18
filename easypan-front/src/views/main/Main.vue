@@ -55,7 +55,15 @@
       >
         <template #fileName="{ index, row }">
           <div class="file-name">
-            {{ row.fileName }}
+            <template 
+              v-if="(row.fileType == 3 || row.fileType == 1) && row.status == 2"
+            >
+              <Icon :cover="row.fileCover" :width="32"></Icon>
+            </template>
+            <template v-else>
+              <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
+              <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
+            </template>
           </div>
         </template>
       </Table>
