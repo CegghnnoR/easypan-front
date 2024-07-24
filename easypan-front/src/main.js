@@ -14,6 +14,7 @@ import Verify from '@/utils/Verify'
 import Message from './utils/Message'
 import Request from './utils/Request'
 import Confirm from './utils/Confirm'
+import Utils from './utils/Utils'
 
 // 自定义组件
 import Dialog from '@/components/Dialog.vue'
@@ -36,6 +37,8 @@ app.config.globalProperties.Verify = Verify
 app.config.globalProperties.Message = Message
 app.config.globalProperties.Request = Request
 app.config.globalProperties.Confirm = Confirm
+app.config.globalProperties.Utils = Utils
+
 app.config.globalProperties.VueCookies = VueCookies
 app.config.globalProperties.globalInfo = {
   avatarUrl: "/api/getAvatar/",
