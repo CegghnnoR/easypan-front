@@ -9,7 +9,7 @@
         <el-popover
           :width="800"
           trigger="click"
-          :v-model:visible="true"
+          v-model:visible="showUploader"
           :offset="20"
           transition="none"
           :hide-after="0"
@@ -19,7 +19,7 @@
             <span class="iconfont icon-transfer"></span>
           </template>
           <template #default>
-            这里是上传区域
+            <Uploader ref="uploaderRef"></Uploader>
           </template>
         </el-popover>
         <el-dropdown>
@@ -82,7 +82,7 @@
       </div>
       <div class="body-content">
         <router-view v-slot="{ Component }">
-          <component :is="Component"></component>
+          <component :is="Component" @addFile="addFile"></component>
         </router-view>
       </div>
     </div>
@@ -95,6 +95,8 @@
 </template>
 
 <script setup>
+import Uploader from './main/Uploader.vue'
+
 import UpdateAvatar from './UpdateAvatar.vue'
 import UpdatePassword from './UpdatePassword.vue'
 import { ref, reactive, getCurrentInstance, nextTick, onMounted, watch } from "vue"
@@ -105,6 +107,16 @@ const route = useRoute()
 
 const api = {
   logout: '/logout'
+}
+
+const showUploader = ref(false)
+
+// 添加文件
+const uploaderRef = ref()
+const addFile = (data) => {
+  const { file, filePid } = data
+  showUploader.value = true
+  uploaderRef.value.addFile(file, filePid)
 }
 
 const timestamp = ref(0)

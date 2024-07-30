@@ -72,13 +72,15 @@
               <span v-if="row.status == 0" class="transfer-status">转码中</span>
               <span v-if="row.status == 1" class="transfer-status transfer-fail">转码失败</span>
             </span>
-            <div class="edit-panel" v-show="row.showEdit">
+            <div class="edit-panel" v-if="row.showEdit">
               <el-input
                 v-model.trim="row.fileNameReal"
                 ref="editNameRef"
                 :maxLength="190"
                 @keyup.enter="saveNameEdit(index)"
-              ></el-input>
+              >
+                <template #suffix>{{ row.fileSuffix }}</template>
+              </el-input>
               <span 
                 :class="['iconfont icon-right1', row.fileNameReal ? '' : 'not-allow']"
                 @click="saveNameEdit(index)"
@@ -95,7 +97,9 @@
                   v-if="row.folderType == 0"
                 >下载</span>
                 <span class="iconfont icon-del">删除</span>
-                <span class="iconfont icon-edit">重命名</span>
+                <span class="iconfont icon-edit"
+                  @click="editFileName(index)"
+                >重命名</span>
                 <span class="iconfont icon-move">移动</span>
               </template>
             </span>
@@ -116,6 +120,14 @@
 // import { columns } from 'element-plus/es/components/table-v2/src/common';
 import { ref, reactive, getCurrentInstance, nextTick } from 'vue'
 const { proxy } = getCurrentInstance()
+
+const emit = defineEmits(["addFile"])
+const addFile = (fileData) => {
+  emit("addFile", {file: fileData.file, filePid: currentFolder.value.fileId})
+}
+
+// 当前目录
+const currentFolder = ref({fileId: 0})
 
 const api = {
   loadDataList: '/file/loadDataList',
@@ -218,16 +230,58 @@ const cancelNameEdit = (index) => {
     fileData.showEdit = false
   } else {
     tableData.value.list.splice(index, 1)
-    editing.value = false
   }
+  editing.value = false
 }
 
-const saveNameEdit = (index) => {
+const saveNameEdit = async (index) => {
   const {fileId, filePid, fileNameReal} = tableData.value.list[index]
   if (fileNameReal == '' || fileNameReal.indexOf('/') != -1) {
     proxy.Message.warning("文件名不能为空，且不能含有斜杠")
     return
   }
+  let url = api.rename
+  if (fileId == "") {
+    url = api.newFolder
+  }
+  let result = await proxy.Request({
+    url: url,
+    params: {
+      fileId: fileId,
+      filePid: filePid,
+      fileName: fileNameReal
+    }
+  })
+  if (!result) {
+    return
+  }
+  tableData.value.list[index] = result.data
+  editing.value = false
+}
+
+const editFileName = (index) => {
+  if (tableData.value.list[0].fileId == "") {
+    tableData.value.list.splice(0, 1)
+    index = index - 1
+  }
+  tableData.value.list.forEach(element => {
+    element.showEdit = false
+  })
+  let currentData = tableData.value.list[index]
+  currentData.showEdit = true
+  // 编辑文件
+  if (currentData.folderType == 0) {
+    currentData.fileNameReal = currentData.fileName.substring(0, currentData.fileName.indexOf("."))
+    currentData.fileSuffix = currentData.fileName.substring(currentData.fileName.indexOf("."))
+  } else {
+    currentData.fileNameReal = currentData.fileName
+    currentData.fileSuffix = ""
+  }
+  editing.value = true
+  nextTick(() => {
+    editNameRef.value.focus()
+  })
+
 }
 </script>
 
