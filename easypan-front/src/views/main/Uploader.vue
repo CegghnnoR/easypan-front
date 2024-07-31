@@ -32,8 +32,69 @@
             >
               {{ item.status == "fail" ? item.errorMsg : STATUS[item.status].desc }}
             </span>
+            <!-- 上传中 -->
+            <span
+              class="upload-info"
+              v-if="item.status == STATUS.uploading.value"
+            >
+              {{ proxy.Utils.size2Str(item.uploadSize) }} /
+              {{ proxy.Utils.size2Str(item.totalSize) }}
+            </span>
           </div>
         </div>
+        <div class="op">
+          <!-- MD5 -->
+          <el-progress
+            type="circle"
+            :width="50"
+            :percentage="item.uploadProgress"
+            v-if="item.status == STATUS.init.value"
+          ></el-progress>
+          <div class="op-btn">
+            <span v-if="item.status == STATUS.uploading.value">
+              <Icon
+                v-if="item.pause"
+                :width="28"
+                class="btn-item"
+                iconName="upload"
+                title="上传"
+                @click="startUpload(item.uid)"
+              ></Icon>
+              <Icon
+                v-else
+                :width="28"
+                class="btn-item"
+                iconName="pause"
+                title="暂停"
+                @click="pauseUpload(item.uid)"
+              ></Icon>
+            </span>
+            <Icon
+              v-if="
+                item.status != STATUS.init.value &&
+                item.status != STATUS.upload_finish.value &&
+                item.status != STATUS.upload_seconds.value"
+              :width="28"
+              class="del btn-item"
+              iconName="del"
+              title="删除"
+              @click="delUpload(item.uid, index)"
+            ></Icon>
+            <Icon
+              v-if="
+                item.status == STATUS.upload_finish.value ||
+                item.status == STATUS.upload_seconds.value"
+              :width="28"
+              class="clean btn-item"
+              iconName="clean"
+              title="清除"
+              @click="delUpload(item.uid, index)"
+            ></Icon>
+          </div>
+        </div>
+      </div>
+      <div v-if="fileList.length == 0">
+        <NoData msg="暂无上传任务"></NoData>
       </div>
     </div>
   </div>
@@ -113,8 +174,11 @@ const addFile = (file, filePid) => {
   }
   fileList.value.unshift(fileItem)
 }
-
 defineExpose({ addFile })
+
+const computeMd5 = (fileItem) => {
+
+}
 </script>
 
 <style lang="scss" scoped>
