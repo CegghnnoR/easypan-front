@@ -103,6 +103,7 @@
 <script setup>
 import { ref, reactive, getCurrentInstance, nextTick } from "vue"
 const { proxy } = getCurrentInstance()
+import SparkMD5 from "spark-md5"
 
 const STATUS = {
   emptyfile: {
@@ -142,8 +143,9 @@ const STATUS = {
     icon: "ok"
   }
 }
+const chunkSize = 1024 * 1024 * 5
 const fileList = ref([])
-const addFile = (file, filePid) => {
+const addFile = async (file, filePid) => {
   const fileItem = {
     // 文件，文件大小，文件流，文件名...
     file: file,
@@ -173,10 +175,52 @@ const addFile = (file, filePid) => {
     errorMsg: null
   }
   fileList.value.unshift(fileItem)
+  if (fileItem.totalSize == 0) {
+    fileItem.status = STATUS.emptyfile.value
+    return
+  }
+  let md5FileUid = await computeMd5(fileItem)
+  if (md5FileUid == null) {
+    return
+  }
+  uploadFile(md5FileUid)
 }
 defineExpose({ addFile })
 
+// 计算MD5
 const computeMd5 = (fileItem) => {
+  let file = fileItem.file
+  let blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice
+  let chunks = Math.ceil(file.size / chunkSize)
+  let currentChunk = 0
+  let spark = new SparkMD5.ArrayBuffer()
+  let fileReader = new FileReader()
+
+  let loadNext = () => {
+    let start = currentChunk * chunkSize
+    let end = Math.min(start + chunkSize, file.size)
+    fileReader.readAsArrayBuffer(blobSlice.call(file, start, end))
+  }
+  loadNext()
+  
+  return new Promise((resolve, reject) => {
+    let resultFile = getFileByUid(file.uid)
+    fileReader.onload = (e) => {
+      spark.append(e.target.result)
+      currentChunk++
+      if (currentChunk < chunks) {
+        
+      }
+    }
+  })
+}
+
+// 获取文件
+const getFileByUid = (uid) => {
+  return fileList.value.find(item => item.file.uid === uid)
+}
+
+const uploadFile = (md5FileUid) => {
 
 }
 </script>
